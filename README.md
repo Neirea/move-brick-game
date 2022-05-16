@@ -1,6 +1,6 @@
-# New Project
+# Move Brick Game
 
-> ✨ Bootstrapped with Create Snowpack App (CSA).
+Made in Typescript without any external library using Snowpack bundler
 
 ## Available Scripts
 

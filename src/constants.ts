@@ -1,12 +1,11 @@
-// const canvas = document.getElementById("myCanvas") as HTMLCanvasElement | null;
-// const ctx = canvas?.getContext("2d");
+let clientW = document.documentElement.clientWidth;
+let clientH = document.documentElement.clientHeight;
 
-//use commented stuff for dymanic sizing?
-
-export const cellSize = 100;
-export const cellGap = 5;
-export const borderWidth = 20;
-export const boardOffset = { x: 50, y: 50 };
+export let canvasSize = clientW > clientH ? 800 : clientW;
+export const cellSize = canvasSize / 8;
+export const cellGap = canvasSize / 160;
+export const borderWidth = canvasSize / 40;
+export const boardOffset = { x: canvasSize / 16, y: canvasSize / 16 };
 
 export enum BlockSize {
 	Short = 2,

@@ -3,19 +3,102 @@
 *::before {
 	box-sizing: border-box;
 }
+* > p {
+	user-select: none;
+	margin: 0;
+}
 body {
 	background: rgb(25, 25, 25);
 	margin: 0;
 	padding: 0;
 	width: 100%;
 	height: 100vh;
+	font-size: 1.5rem;
+	font-family: BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+		"Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+}
+.invis {
+	position: relative;
+	font-size: 4rem;
+	top: 1%;
+	margin: 0;
+	opacity: 0;
+	color: white;
+	text-align: center;
 }
 #myCanvas {
+	touch-action: none;
 	position: absolute;
 	top: 50%;
 	left: 50%;
 
-	box-shadow: 0 0 16px grey;
+	box-shadow: 0 0 1rem grey;
 	background: rgb(230, 196, 125);
 	transform: translate(-50%, -50%);
 }
+#controlPanel {
+	touch-action: none;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	position: absolute;
+	padding: 0 1.25rem;
+	left: 50%;
+	top: calc(21.875rem + 50%);
+	transform: translate(-50%, -50%);
+	background: rgba(41, 16, 0, 0.8);
+	height: 6.25rem;
+	width: min(800px, 100%);
+	color: rgb(230, 196, 125);
+}
+#movesPanel,
+#levelsPanel {
+	display: flex;
+	gap: 0.625rem;
+}
+#movesText,
+#levelsText {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	white-space: nowrap;
+}
+/* buttons */
+.btn {
+	border: none;
+	display: inline-block;
+	font-size: 1.5rem;
+	padding: 1rem 2rem;
+	border-radius: 2rem;
+	color: rgb(41, 16, 0);
+	background-color: rgb(230, 196, 125);
+	box-shadow: 0 0 1rem rgb(25, 25, 25, 0.5);
+	user-select: none;
+}
+.btn:enabled:hover {
+	background-color: white;
+	cursor: pointer;
+}
+.btn:disabled {
+	opacity: 0.5;
+}
+/* win headings */
+h3 {
+	display: none;
+	position: absolute;
+	top: calc(50% - 6.25rem);
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 3.5rem;
+	color: white;
+	white-space: nowrap;
+	user-select: none;
+}
+@media (max-width: 800px) {
+	* {
+		font-size: 2vw;
+	}
+	p {
+		font-size: 1.5rem;
+	}
+} ;

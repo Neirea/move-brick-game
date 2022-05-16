@@ -1,6 +1,6 @@
 import "./index.css";
-import { cellSize, Direction, BlockSize } from "./constants";
-import { Board, Cell, Block, PlayerBlock, Mouse, GameGrid } from "./classes";
+import { cellSize, Direction, canvasSize } from "./constants";
+import { Board, Block, Mouse, GameGrid } from "./classes";
 import {
 	isCollision,
 	checkBounds,
@@ -9,41 +9,89 @@ import {
 	offsetX,
 	offsetY,
 } from "./utils";
+import { getLevels } from "./levels";
 
+// query selectors
 const canvas = document.getElementById("myCanvas") as HTMLCanvasElement | null;
 const ctx = canvas?.getContext("2d");
+const startGameButton = document.getElementById(
+	"nextLevel"
+) as HTMLButtonElement | null;
+const resetLevelButton = document.getElementById(
+	"restartLevel"
+) as HTMLButtonElement | null;
+const playerMoves = document.querySelector(
+	"#movesCounter>p:first-of-type"
+) as HTMLParagraphElement | null;
+const bestMoves = document.querySelector(
+	"#movesCounter>p:last-of-type"
+) as HTMLParagraphElement | null;
+const currentLvlElem = document.querySelector(
+	"#levelsCounter>p:first-of-type"
+) as HTMLParagraphElement | null;
+const totalLvlsElem = document.querySelector(
+	"#levelsCounter>p:last-of-type"
+) as HTMLParagraphElement | null;
+const levelCleared = document.querySelector(
+	"h3:first-of-type"
+) as HTMLHeadingElement | null;
+const allLevelsCleared = document.querySelector(
+	"h3:last-of-type"
+) as HTMLHeadingElement | null;
+
+//global vars
 const gameGrid = new GameGrid();
-const controlsGrid: Cell[] = [];
-const blocks: Block[] = [];
+let blocks: Block[] = [];
 const mouse: Mouse = new Mouse();
-// create Game class with method to start game
 const gameBoard = new Board(offsetX(0), offsetY(0), 6);
+let currentLvl = 0;
+let movesCount = 0;
+let isWin = false;
+let restartLvl = true;
+const maxLevels = getLevels().length;
+const winEvent = new Event("onWin");
 
 //global settings
 if (canvas != null) {
-	// canvas.width = 800;
-	// canvas.height = 800;
-
-	canvas.addEventListener("mousemove", function (e) {
-		const canvasPosition = canvas.getBoundingClientRect();
-		mouse.x = e.x - canvasPosition.left;
-		mouse.y = e.y - canvasPosition.top;
-	});
-	canvas.addEventListener("mouseleave", function (e) {
-		mouse.x = 0;
-		mouse.y = 0;
-	});
-	canvas.onmousedown = dragMouseDown;
+	canvas.width = canvasSize;
+	canvas.height = canvasSize;
+	addEvents();
+}
+function addEvents() {
+	if (canvas) {
+		canvas.addEventListener("mousemove", function (e) {
+			const canvasPosition = canvas.getBoundingClientRect();
+			mouse.x = e.x - canvasPosition.left;
+			mouse.y = e.y - canvasPosition.top;
+		});
+		canvas.addEventListener("mouseleave", function (e) {
+			mouse.x = 0;
+			mouse.y = 0;
+		});
+		canvas.onmousedown = dragMouse;
+		canvas.ontouchstart = touchDrag;
+	}
+}
+function removeMouseDownTouchStart() {
+	if (canvas) {
+		canvas.onmousedown = null;
+		canvas.ontouchstart = null;
+	}
+}
+function addMouseDownTouchStart() {
+	if (canvas) {
+		canvas.onmousedown = dragMouse;
+		canvas.ontouchstart = touchDrag;
+	}
 }
 
-//controlsbar
-const controlsBar = {
-	width: canvas?.width || 0,
-	height: cellSize,
-};
-
+function touchDrag(e: TouchEvent) {
+	e.preventDefault();
+	const text = document.querySelector(".invis") as HTMLHeadingElement | null;
+	if (text) text.style.opacity = "1";
+}
 //dragging blocks
-function dragMouseDown(e: MouseEvent) {
+function dragMouse(e: MouseEvent) {
 	e.preventDefault();
 	//on mousedown get index of current block
 	const movingBlockIndex = getBlockIndex();
@@ -160,11 +208,57 @@ function dragMouseDown(e: MouseEvent) {
 			initialBlockY +
 			Math.round((block.y - initialBlockY) / cellSize) * cellSize;
 
+		let deltaX = (block.x - initialBlockX) % cellSize;
+		let deltaY = (block.y - initialBlockY) % cellSize;
+
+		if (deltaX < 50 && deltaX > -50) deltaX = -deltaX;
+		if (deltaX <= -50) deltaX = -deltaX - cellSize;
+		if (deltaX >= 50) deltaX = cellSize - deltaX;
+		if (deltaY < 50 && deltaY > -50) deltaY = -deltaY;
+		if (deltaY <= -50) deltaY = -deltaY - cellSize;
+		if (deltaY >= 50) deltaY = cellSize - deltaY;
+
+		console.log("new delta=", deltaX);
+
 		//add animation from block.x to moveX and same for Y
+		function animateMoveEnd() {
+			removeMouseDownTouchStart();
+			if (!block.vertical) {
+				if (deltaX !== 0) {
+					block.x += Math.sign(deltaX);
+					deltaX -= 2 * Math.sign(deltaX);
+					requestAnimationFrame(animateMoveEnd);
+				} else {
+					block.x = moveX;
+					addMouseDownTouchStart();
+				}
+				return;
+			} else {
+				if (deltaY > 0.5 || deltaY < -0.5) {
+					block.y += Math.sign(deltaY);
+					deltaY -= 1.5 * Math.sign(deltaY);
+					requestAnimationFrame(animateMoveEnd);
+					return;
+				} else {
+					block.y = moveY;
+					addMouseDownTouchStart();
+				}
+			}
+			block.draw();
+		}
+		animateMoveEnd();
 		if (!block.vertical) {
-			block.x = moveX;
+			if (moveX !== initialBlockX) {
+				movesCount++;
+				if (playerMoves) playerMoves.textContent = movesCount.toString();
+			}
+			// block.x = moveX;
 		} else {
-			block.y = moveY;
+			if (moveY !== initialBlockY) {
+				movesCount++;
+				if (playerMoves) playerMoves.textContent = movesCount.toString();
+			}
+			// block.y = moveY;
 		}
 		block.canMove = { right: true, left: true, up: true, down: true };
 
@@ -173,56 +267,121 @@ function dragMouseDown(e: MouseEvent) {
 	}
 }
 
-// TEST BLOCK - player block
-const testBlockHorizontal = new PlayerBlock(offsetX(0));
-const testBlockVertical = new Block(
-	offsetX(300),
-	offsetY(200),
-	true,
-	BlockSize.Long
-);
 //animation cycle
 function animate() {
-	if (checkWin(testBlockHorizontal, gameBoard)) {
+	if (blocks.length && checkWin(blocks[0], gameBoard)) {
+		isWin = true;
+		restartLvl = true;
+		if (canvas) {
+			canvas.style.opacity = "0.3";
+		}
+
 		//animate win thing
+		if (startGameButton) startGameButton.disabled = false;
+		//check for last level
+		if (currentLvl + 1 === maxLevels) {
+			if (allLevelsCleared) allLevelsCleared.style.display = "block";
+			if (startGameButton) startGameButton.textContent = "Start again";
+		} else {
+			if (levelCleared) levelCleared.style.display = "block";
+		}
+		document.dispatchEvent(winEvent);
+		animateWin();
+		return;
 	}
 
-	if (ctx && canvas) {
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		//get picture background instead
-		//draw ControlBar
-		ctx.fillStyle = "blue";
-		ctx.fillRect(
-			0,
-			offsetY(gameBoard.y + gameBoard.height),
-			controlsBar.width,
-			controlsBar.height
-		);
-	}
 	gameBoard.draw();
 	for (let i = 0; i < blocks.length; i++) {
 		//get instead of fillRect good textures
 		blocks[i].draw();
 	}
-	requestAnimationFrame(animate);
+	if (!isWin) requestAnimationFrame(animate);
 }
+
+//animation on getting level down
+function animateWin() {
+	if (isWin) {
+		canvas && ctx?.clearRect(0, 0, canvas.width, canvas.height);
+
+		gameBoard.draw();
+		for (let i = 0; i < blocks.length; i++) {
+			blocks[i].draw();
+		}
+		//finish animation
+		if (canvas && blocks[0].x > canvas.width) {
+			return;
+		}
+		blocks[0].draw();
+		blocks[0].x++;
+		requestAnimationFrame(animateWin);
+	}
+}
+
+document.addEventListener("onWin", () => {
+	if (isWin) {
+		removeMouseDownTouchStart();
+	}
+});
+
+function resetValues() {
+	if (canvas) canvas.style.opacity = "1";
+	if (levelCleared) levelCleared.style.display = "none";
+	if (allLevelsCleared) allLevelsCleared.style.display = "none";
+	if (playerMoves) playerMoves.textContent = "0";
+
+	addEvents();
+	movesCount = 0;
+	isWin = false;
+	blocks = getLevels()[currentLvl].blocks;
+}
+
+startGameButton?.addEventListener("click", () => {
+	startGameButton.disabled = true;
+	if (startGameButton.textContent !== "Start again") {
+		currentLvl++;
+	} else {
+		currentLvl = 0;
+		startGameButton.textContent = "Next level";
+	}
+	if (currentLvlElem?.textContent) {
+		currentLvlElem.textContent = (currentLvl + 1).toString();
+	}
+	if (bestMoves) bestMoves.textContent = getLevels()[currentLvl].bestMoves;
+	resetValues();
+
+	animate();
+});
+resetLevelButton?.addEventListener("click", () => {
+	if (startGameButton) {
+		if (startGameButton.textContent === "Start again") {
+			startGameButton.textContent = "Next level";
+		}
+		startGameButton.disabled = true;
+	}
+	resetValues();
+
+	if (restartLvl) {
+		restartLvl = false;
+		animate();
+	}
+});
 
 //start game function
 export function startGame() {
-	// document.addEventListener(
-	// 	"contextmenu",
-	// 	function (event) {
-	// 		event.preventDefault();
-	// 	},
-	// 	false
-	// );
-	blocks.push(testBlockHorizontal);
-	blocks.push(testBlockVertical);
+	if (startGameButton) {
+		startGameButton.disabled = true;
+	}
+	if (currentLvlElem) {
+		currentLvlElem.textContent = "1";
+	}
 
 	//create board
 	gameGrid.create(gameBoard);
+	if (playerMoves) playerMoves.textContent = movesCount.toString();
+	if (bestMoves) bestMoves.textContent = getLevels()[currentLvl].bestMoves;
+	if (totalLvlsElem) totalLvlsElem.innerText = maxLevels.toString();
+	blocks = getLevels()[currentLvl].blocks;
 
-	//load level
 	//start animations
 	animate();
 }

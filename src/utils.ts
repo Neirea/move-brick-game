@@ -1,5 +1,5 @@
 import type { Block, Unit } from "./classes";
-import { boardOffset, cellSize, Direction } from "./constants";
+import { boardOffset, Direction } from "./constants";
 //check if two units have overlap
 export function isCollision(first: Unit, second: Unit) {
 	if (
@@ -66,8 +66,6 @@ export function offsetY(y: number) {
 
 export function checkWin(playerBlock: Block, bounds: Unit) {
 	if (playerBlock.x + playerBlock.width >= bounds.x + bounds.width) {
-		console.log("WIN");
-
 		return true;
 	}
 	return false;

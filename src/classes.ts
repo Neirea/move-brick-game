@@ -4,8 +4,8 @@ import shortImage from "./short.svg";
 import longImage from "./long.svg";
 import vShortImage from "./short_v.svg";
 import vLongImage from "./long_v.svg";
-import boardImage from "./board.svg";
 import playerImage from "./player.svg";
+import boardImage from "./board.svg";
 
 const canvas = document.getElementById("myCanvas") as HTMLCanvasElement | null;
 const ctx = canvas?.getContext("2d");
@@ -38,23 +38,23 @@ export class Board implements Unit {
 	height: number;
 	image: HTMLImageElement;
 	constructor(x: number, y: number, numberOfCells: number) {
-		const boardImage = new Image();
+		const boardImg = new Image();
 		this.x = x;
 		this.y = y;
 		this.width = cellSize * numberOfCells;
 		this.height = cellSize * numberOfCells;
-		this.image = boardImage;
+		this.image = boardImg;
 	}
 	draw() {
 		if (ctx) {
 			this.image.src = boardImage;
-
+			//need offsets because of bad image
 			ctx.drawImage(
 				this.image,
-				this.x,
-				this.y,
-				this.width + cellGap,
-				this.height + cellGap
+				this.x - cellSize / 10 - cellGap / 2,
+				this.y - cellSize / 10 - cellGap / 2,
+				this.width + 2 * cellGap + 1.85 * cellSize,
+				this.height + 2 * cellGap + cellSize / 5
 			);
 		}
 	}

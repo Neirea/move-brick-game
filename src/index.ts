@@ -55,9 +55,7 @@ let blocks: Block[] = [];
 const mouse: Mouse = new Mouse();
 const touch: Touch = new Touch();
 const gameBoard = new Board(offsetX(0), offsetY(0), 6);
-const winEvent = new Event("onWin");
 let movesCount = 0;
-let isWin = false;
 let stopAnimation = true;
 
 //global settings
@@ -363,77 +361,42 @@ function drawEssentials() {
 }
 //animation on getting level down
 function animateWin() {
-	if (isWin) {
-		drawEssentials();
-		//finish animation
-		if (canvas && blocks[0].x > canvas.width) {
-			return;
-		}
-		blocks[0].draw();
-		blocks[0].x += 2;
-		requestAnimationFrame(animateWin);
+	drawEssentials();
+	//finish animation when block is outside of screen or new game starts
+	if ((canvas && blocks[0].x > canvas.width) || startGameButton?.disabled) {
+		return;
 	}
+	blocks[0].draw();
+	blocks[0].x += 2;
+	requestAnimationFrame(animateWin);
 }
 //main animate function
 function animate() {
+	//on win
 	if (blocks.length && checkWin(blocks[0], gameBoard)) {
-		isWin = true;
-		stopAnimation = true;
-		if (canvas) {
-			canvas.style.opacity = "0.3";
-		}
-
-		//animate win thing
-		if (startGameButton) startGameButton.disabled = false;
-		//check for last level
-		if (currentLvl + 1 === maxLevels) {
-			if (allLevelsCleared) allLevelsCleared.style.display = "block";
-			if (startGameButton) startGameButton.textContent = "Start again";
-		} else {
-			if (levelCleared) levelCleared.style.display = "block";
-		}
-		document.dispatchEvent(winEvent);
-		animateWin();
+		actionsOnWin();
 		return;
 	}
 	drawEssentials();
-	if (!isWin) requestAnimationFrame(animate);
+	requestAnimationFrame(animate);
 }
 
 /* EVENT LISTENERS */
-//custom when Win === true event
-document.addEventListener("onWin", () => {
-	if (isWin) {
-		//save progress
-		if (currentLvl + 1 !== maxLevels && currentLvl + 1 > currentMaxLvl) {
-			currentMaxLvl = currentLvl + 1;
-			localStorage.setItem("game", encode((currentLvl + 1).toString()));
-			addLevelToLoadList(currentLvl + 1);
-		}
-		//simulating mouseup/touchend events
-		const mouseUpEvent = new Event("mouseup");
-		document.dispatchEvent(mouseUpEvent);
-		const touchEndEvent = new Event("touchend");
-		document.dispatchEvent(touchEndEvent);
-		//remove mouse controls
-		removeMouseDownTouchStart();
-	}
-});
 //next level/start again
 startGameButton?.addEventListener("click", () => {
 	startGameButton.disabled = true;
-	if (startGameButton.textContent !== "Start again") {
-		currentLvl++;
-	} else {
+	if (startGameButton.textContent === "Start again") {
+		startGameButton.textContent = "Next level";
 		currentLvl = 0;
 		currentMaxLvl = 0;
-		resetLoadList();
 		localStorage.removeItem("game");
-		startGameButton.textContent = "Next level";
+		resetLoadList();
+	} else {
+		currentLvl++;
 	}
 	if (currentLvlElem) currentLvlElem.textContent = (currentLvl + 1).toString();
 	if (bestMoves) bestMoves.textContent = getLevels()[currentLvl].bestMoves;
-	resetValues();
+	resetUIElements();
 
 	animate();
 });
@@ -445,7 +408,8 @@ restartLevelButton?.addEventListener("click", () => {
 		}
 		startGameButton.disabled = true;
 	}
-	resetValues();
+
+	resetUIElements();
 
 	if (stopAnimation) {
 		stopAnimation = false;
@@ -460,10 +424,12 @@ loadLevelSelect?.addEventListener("change", () => {
 		}
 		startGameButton.disabled = true;
 	}
+
 	currentLvl = loadLevelSelect.selectedIndex - 1;
 	if (currentLvlElem) currentLvlElem.textContent = (currentLvl + 1).toString();
 	loadLevelSelect.selectedIndex = 0;
-	resetValues();
+
+	resetUIElements();
 
 	if (stopAnimation) {
 		stopAnimation = false;
@@ -471,7 +437,7 @@ loadLevelSelect?.addEventListener("change", () => {
 	}
 });
 
-//start game function
+/* START GAME FUNCTION */
 export function startGame() {
 	if (startGameButton) {
 		startGameButton.disabled = true;
@@ -493,8 +459,6 @@ export function startGame() {
 	//start animations
 	animate();
 }
-
-startGame();
 
 /* HELPER FUNCTIONS */
 function addEvents() {
@@ -540,7 +504,39 @@ function removeMouseDownTouchStart() {
 		canvas.ontouchstart = null;
 	}
 }
-function resetValues() {
+//bunch of actions when player wins
+function actionsOnWin() {
+	//used to start new animation after win
+	stopAnimation = true;
+	//some styling
+	if (canvas) {
+		canvas.style.opacity = "0.3";
+	}
+	if (startGameButton) startGameButton.disabled = false;
+	//check for last level
+	if (currentLvl + 1 === maxLevels) {
+		if (allLevelsCleared) allLevelsCleared.style.display = "block";
+		if (startGameButton) startGameButton.textContent = "Start again";
+	} else {
+		if (levelCleared) levelCleared.style.display = "block";
+	}
+	//save progress
+	if (currentLvl + 1 !== maxLevels && currentLvl + 1 > currentMaxLvl) {
+		currentMaxLvl = currentLvl + 1;
+		localStorage.setItem("game", encode((currentLvl + 1).toString()));
+		addLevelToLoadList(currentLvl + 1);
+	}
+	//simulating mouseup/touchend events
+	const mouseUpEvent = new Event("mouseup");
+	document.dispatchEvent(mouseUpEvent);
+	const touchEndEvent = new Event("touchend");
+	document.dispatchEvent(touchEndEvent);
+	//remove mouse controls
+	removeMouseDownTouchStart();
+	animateWin();
+}
+//reset UI
+function resetUIElements() {
 	if (canvas) canvas.style.opacity = "1";
 	if (levelCleared) levelCleared.style.display = "none";
 	if (allLevelsCleared) allLevelsCleared.style.display = "none";
@@ -548,6 +544,8 @@ function resetValues() {
 
 	addEvents();
 	movesCount = 0;
-	isWin = false;
 	blocks = getLevels()[currentLvl].blocks;
 }
+
+//LAUNCH GAME
+startGame();

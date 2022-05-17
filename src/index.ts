@@ -87,8 +87,11 @@ function touchDrag(e: TouchEvent) {
 	let previousTouchPosY = firstTouch.pageY;
 
 	if (movingBlockIndex >= 0) {
-		document.ontouchend = (e) => {
-			stopTouchDrag(e, blocks[movingBlockIndex]);
+		document.ontouchend = () => {
+			stopTouchDrag(blocks[movingBlockIndex]);
+		};
+		document.ontouchcancel = () => {
+			stopTouchDrag(blocks[movingBlockIndex]);
 		};
 		document.ontouchmove = (e) =>
 			!blocks[movingBlockIndex].vertical
@@ -184,7 +187,7 @@ function touchDrag(e: TouchEvent) {
 		block.y = y;
 		previousTouchPosY = firstTouch.pageY;
 	}
-	function stopTouchDrag(es: TouchEvent, block: Block) {
+	function stopTouchDrag(block: Block) {
 		//calculate final position and round up to final cell
 		const moveX =
 			initialBlockX +

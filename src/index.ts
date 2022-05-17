@@ -1,6 +1,6 @@
 import "./index.css";
 import { cellSize, Direction, canvasSize } from "./constants";
-import { Board, Block, Mouse, GameGrid } from "./classes";
+import { Board, Block, Mouse, Touch, GameGrid } from "./classes";
 import {
 	isCollision,
 	checkBounds,
@@ -8,6 +8,8 @@ import {
 	checkWin,
 	offsetX,
 	offsetY,
+	encode,
+	decode,
 } from "./utils";
 import { getLevels } from "./levels";
 
@@ -17,7 +19,7 @@ const ctx = canvas?.getContext("2d");
 const startGameButton = document.getElementById(
 	"nextLevel"
 ) as HTMLButtonElement | null;
-const resetLevelButton = document.getElementById(
+const restartLevelButton = document.getElementById(
 	"restartLevel"
 ) as HTMLButtonElement | null;
 const playerMoves = document.querySelector(
@@ -38,18 +40,25 @@ const levelCleared = document.querySelector(
 const allLevelsCleared = document.querySelector(
 	"h3:last-of-type"
 ) as HTMLHeadingElement | null;
+const loadLevelSelect = document.querySelector(
+	"#loadLevel"
+) as HTMLSelectElement | null;
+
+const getLvl = localStorage.getItem("game");
+let currentLvl = getLvl !== null ? parseInt(decode(getLvl)) : 0;
+let currentMaxLvl = currentLvl;
+const maxLevels = getLevels().length;
 
 //global vars
 const gameGrid = new GameGrid();
 let blocks: Block[] = [];
 const mouse: Mouse = new Mouse();
+const touch: Touch = new Touch();
 const gameBoard = new Board(offsetX(0), offsetY(0), 6);
-let currentLvl = 0;
+const winEvent = new Event("onWin");
 let movesCount = 0;
 let isWin = false;
-let restartLvl = true;
-const maxLevels = getLevels().length;
-const winEvent = new Event("onWin");
+let stopAnimation = true;
 
 //global settings
 if (canvas != null) {
@@ -57,41 +66,154 @@ if (canvas != null) {
 	canvas.height = canvasSize;
 	addEvents();
 }
-function addEvents() {
-	if (canvas) {
-		canvas.addEventListener("mousemove", function (e) {
-			const canvasPosition = canvas.getBoundingClientRect();
-			mouse.x = e.x - canvasPosition.left;
-			mouse.y = e.y - canvasPosition.top;
-		});
-		canvas.addEventListener("mouseleave", function (e) {
-			mouse.x = 0;
-			mouse.y = 0;
-		});
-		canvas.onmousedown = dragMouse;
-		canvas.ontouchstart = touchDrag;
-	}
-}
-function removeMouseDownTouchStart() {
-	if (canvas) {
-		canvas.onmousedown = null;
-		canvas.ontouchstart = null;
-	}
-}
-function addMouseDownTouchStart() {
-	if (canvas) {
-		canvas.onmousedown = dragMouse;
-		canvas.ontouchstart = touchDrag;
-	}
-}
 
+//dragging blocks with touch
 function touchDrag(e: TouchEvent) {
 	e.preventDefault();
-	const text = document.querySelector(".invis") as HTMLHeadingElement | null;
-	if (text) text.style.opacity = "1";
+	/* touch part */
+	if (e.targetTouches.length > 1) {
+		return;
+	}
+	const firstTouch = e.targetTouches[0];
+	offsetTouch(firstTouch);
+	/* ---------- */
+	const movingBlockIndex = getBlockIndexByTouch();
+	if (movingBlockIndex === -1) return;
+	const initialBlockX = blocks[movingBlockIndex].x;
+	const initialBlockY = blocks[movingBlockIndex].y;
+	const initialTouchX = firstTouch.pageX;
+	const initialTouchY = firstTouch.pageY;
+	let previousTouchPosX = firstTouch.pageX;
+	let previousTouchPosY = firstTouch.pageY;
+
+	if (movingBlockIndex >= 0) {
+		document.ontouchend = (e) => {
+			stopTouchDrag(e, blocks[movingBlockIndex]);
+		};
+		document.ontouchmove = (e) =>
+			!blocks[movingBlockIndex].vertical
+				? touchDragX(e, blocks[movingBlockIndex])
+				: touchDragY(e, blocks[movingBlockIndex]);
+	}
+	//get block index
+	function getBlockIndexByTouch(): number {
+		for (let i = 0; i < blocks.length; i++) {
+			if (isCollision(blocks[i], touch)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	function touchDragX(ex: TouchEvent, block: Block) {
+		let x = block.x;
+		/* touch part */
+		const firstTouch = ex.targetTouches[0];
+		/* ---------- */
+
+		//horizontal
+		const mouseDeltaX = firstTouch.pageX - initialTouchX;
+
+		const moveDirectionX =
+			firstTouch.pageX > previousTouchPosX ? Direction.Right : Direction.Left;
+		if (moveDirectionX === Direction.Right && !block.canMove.right) {
+			//check distance to other
+			return;
+		}
+		if (moveDirectionX === Direction.Left && !block.canMove.left) {
+			return;
+		}
+		block.canMove.right = true;
+		block.canMove.left = true;
+
+		const movePositionX = initialBlockX + mouseDeltaX;
+		const testBlock: Block = new Block(
+			movePositionX, //x
+			block.y,
+			block.vertical,
+			block.size
+		);
+
+		x = checkBounds(testBlock, gameBoard).x;
+		for (let i = 0; i < blocks.length; i++) {
+			if (block !== blocks[i] && isCollision(testBlock, blocks[i])) {
+				const movement = checkBlock(testBlock, blocks[i]);
+				movement.direction === Direction.Right
+					? (block.canMove.right = false)
+					: (block.canMove.left = false);
+				x = movement.x;
+			}
+		}
+		block.x = x;
+		previousTouchPosX = firstTouch.pageX;
+	}
+	function touchDragY(ey: TouchEvent, block: Block) {
+		let y = block.y;
+		/* touch part */
+		const firstTouch = ey.targetTouches[0];
+		/* ---------- */
+		const mouseDeltaY = firstTouch.pageY - initialTouchY;
+		const moveDirectionY =
+			firstTouch.pageY > previousTouchPosY ? Direction.Down : Direction.Up;
+		if (moveDirectionY === Direction.Up && !block.canMove.up) {
+			return;
+		}
+		if (moveDirectionY === Direction.Down && !block.canMove.down) {
+			return;
+		}
+		block.canMove.up = true;
+		block.canMove.down = true;
+
+		const movePositionY = initialBlockY + mouseDeltaY;
+		const testBlock: Block = new Block(
+			block.x,
+			movePositionY, //y
+			block.vertical,
+			block.size
+		);
+
+		y = checkBounds(testBlock, gameBoard).y;
+		for (let i = 0; i < blocks.length; i++) {
+			if (block !== blocks[i] && isCollision(testBlock, blocks[i])) {
+				const movement = checkBlock(testBlock, blocks[i]);
+				movement.direction === Direction.Up
+					? (block.canMove.up = false)
+					: (block.canMove.down = false);
+				y = movement.y;
+			}
+		}
+		block.y = y;
+		previousTouchPosY = firstTouch.pageY;
+	}
+	function stopTouchDrag(es: TouchEvent, block: Block) {
+		//calculate final position and round up to final cell
+		const moveX =
+			initialBlockX +
+			Math.round((block.x - initialBlockX) / cellSize) * cellSize;
+		const moveY =
+			initialBlockY +
+			Math.round((block.y - initialBlockY) / cellSize) * cellSize;
+
+		if (!block.vertical) {
+			if (moveX !== initialBlockX) {
+				movesCount++;
+				if (playerMoves) playerMoves.textContent = movesCount.toString();
+			}
+			block.x = moveX;
+		} else {
+			if (moveY !== initialBlockY) {
+				movesCount++;
+				if (playerMoves) playerMoves.textContent = movesCount.toString();
+			}
+			block.y = moveY;
+		}
+		block.canMove = { right: true, left: true, up: true, down: true };
+
+		document.ontouchmove = null;
+		document.ontouchend = null;
+	}
 }
-//dragging blocks
-function dragMouse(e: MouseEvent) {
+//dragging blocks with mouse
+function mouseDrag(e: MouseEvent) {
 	e.preventDefault();
 	//on mousedown get index of current block
 	const movingBlockIndex = getBlockIndex();
@@ -104,15 +226,11 @@ function dragMouse(e: MouseEvent) {
 	let previousMousePosY = e.y;
 
 	if (movingBlockIndex >= 0) {
-		document.onmouseup = () => closeDragBlock(blocks[movingBlockIndex]);
+		document.onmouseup = () => stopMouseDrag(blocks[movingBlockIndex]);
 		document.onmousemove = (e) =>
 			!blocks[movingBlockIndex].vertical
-				? blockDragX(e, blocks[movingBlockIndex])
-				: blockDragY(e, blocks[movingBlockIndex]);
-		document.ontouchend = () => closeDragBlock(blocks[movingBlockIndex]);
-		// document.ontouchmove = !blocks[movingBlockIndex].vertical
-		// 	? blockDragX(e, blocks[movingBlockIndex])
-		// 	: blockDragY(e, blocks[movingBlockIndex]);
+				? mouseDragX(e, blocks[movingBlockIndex])
+				: mouseDragY(e, blocks[movingBlockIndex]);
 	}
 	//get block index
 	function getBlockIndex(): number {
@@ -124,7 +242,7 @@ function dragMouse(e: MouseEvent) {
 		return -1;
 	}
 	//on drag horizontally
-	function blockDragX(e: MouseEvent, block: Block) {
+	function mouseDragX(e: MouseEvent, block: Block) {
 		let x = block.x;
 
 		//horizontal
@@ -164,7 +282,7 @@ function dragMouse(e: MouseEvent) {
 		previousMousePosX = e.x;
 	}
 	//on drag vertically
-	function blockDragY(e: MouseEvent, block: Block) {
+	function mouseDragY(e: MouseEvent, block: Block) {
 		let y = block.y;
 		const mouseDeltaY = e.y - initialMouseY;
 		const moveDirectionY =
@@ -200,7 +318,8 @@ function dragMouse(e: MouseEvent) {
 		previousMousePosY = e.y;
 	}
 	//on drop
-	function closeDragBlock(block: Block) {
+	function stopMouseDrag(block: Block) {
+		//calculate final position and round up to final cell
 		const moveX =
 			initialBlockX +
 			Math.round((block.x - initialBlockX) / cellSize) * cellSize;
@@ -208,70 +327,55 @@ function dragMouse(e: MouseEvent) {
 			initialBlockY +
 			Math.round((block.y - initialBlockY) / cellSize) * cellSize;
 
-		let deltaX = (block.x - initialBlockX) % cellSize;
-		let deltaY = (block.y - initialBlockY) % cellSize;
-
-		if (deltaX < 50 && deltaX > -50) deltaX = -deltaX;
-		if (deltaX <= -50) deltaX = -deltaX - cellSize;
-		if (deltaX >= 50) deltaX = cellSize - deltaX;
-		if (deltaY < 50 && deltaY > -50) deltaY = -deltaY;
-		if (deltaY <= -50) deltaY = -deltaY - cellSize;
-		if (deltaY >= 50) deltaY = cellSize - deltaY;
-
-		console.log("new delta=", deltaX);
-
-		//add animation from block.x to moveX and same for Y
-		function animateMoveEnd() {
-			removeMouseDownTouchStart();
-			if (!block.vertical) {
-				if (deltaX !== 0) {
-					block.x += Math.sign(deltaX);
-					deltaX -= 2 * Math.sign(deltaX);
-					requestAnimationFrame(animateMoveEnd);
-				} else {
-					block.x = moveX;
-					addMouseDownTouchStart();
-				}
-				return;
-			} else {
-				if (deltaY > 0.5 || deltaY < -0.5) {
-					block.y += Math.sign(deltaY);
-					deltaY -= 1.5 * Math.sign(deltaY);
-					requestAnimationFrame(animateMoveEnd);
-					return;
-				} else {
-					block.y = moveY;
-					addMouseDownTouchStart();
-				}
-			}
-			block.draw();
-		}
-		animateMoveEnd();
 		if (!block.vertical) {
 			if (moveX !== initialBlockX) {
 				movesCount++;
 				if (playerMoves) playerMoves.textContent = movesCount.toString();
 			}
-			// block.x = moveX;
+			block.x = moveX;
 		} else {
 			if (moveY !== initialBlockY) {
 				movesCount++;
 				if (playerMoves) playerMoves.textContent = movesCount.toString();
 			}
-			// block.y = moveY;
+			block.y = moveY;
 		}
 		block.canMove = { right: true, left: true, up: true, down: true };
 
-		document.onmousemove = null;
 		document.onmouseup = null;
+		document.onmousemove = null;
 	}
 }
 
-//animation cycle
+/* ANIMATION FUNCTIONS */
+//draw essential blocks
+function drawEssentials() {
+	canvas && ctx?.clearRect(0, 0, canvas.width, canvas.height);
+	gameBoard.draw();
+	gameGrid.draw();
+	for (let i = 0; i < blocks.length; i++) {
+		//get instead of fillRect good textures
+		blocks[i].draw();
+	}
+}
+//animation on getting level down
+function animateWin() {
+	if (isWin) {
+		drawEssentials();
+		//finish animation
+		if (canvas && blocks[0].x > canvas.width) {
+			return;
+		}
+		blocks[0].draw();
+		blocks[0].x += 2;
+		requestAnimationFrame(animateWin);
+	}
+}
+//main animate function
 function animate() {
 	if (blocks.length && checkWin(blocks[0], gameBoard)) {
 		isWin = true;
-		restartLvl = true;
+		stopAnimation = true;
 		if (canvas) {
 			canvas.style.opacity = "0.3";
 		}
@@ -289,40 +393,150 @@ function animate() {
 		animateWin();
 		return;
 	}
-
-	gameBoard.draw();
-	for (let i = 0; i < blocks.length; i++) {
-		//get instead of fillRect good textures
-		blocks[i].draw();
-	}
+	drawEssentials();
 	if (!isWin) requestAnimationFrame(animate);
 }
 
-//animation on getting level down
-function animateWin() {
-	if (isWin) {
-		canvas && ctx?.clearRect(0, 0, canvas.width, canvas.height);
-
-		gameBoard.draw();
-		for (let i = 0; i < blocks.length; i++) {
-			blocks[i].draw();
-		}
-		//finish animation
-		if (canvas && blocks[0].x > canvas.width) {
-			return;
-		}
-		blocks[0].draw();
-		blocks[0].x++;
-		requestAnimationFrame(animateWin);
-	}
-}
-
+/* EVENT LISTENERS */
+//custom when Win === true event
 document.addEventListener("onWin", () => {
 	if (isWin) {
+		//save progress
+		if (currentLvl + 1 !== maxLevels && currentLvl + 1 > currentMaxLvl) {
+			currentMaxLvl = currentLvl + 1;
+			localStorage.setItem("game", encode((currentLvl + 1).toString()));
+			addLevelToLoadList(currentLvl + 1);
+		}
+		//simulating mouseup/touchend events
+		const mouseUpEvent = new Event("mouseup");
+		document.dispatchEvent(mouseUpEvent);
+		const touchEndEvent = new Event("touchend");
+		document.dispatchEvent(touchEndEvent);
+		//remove mouse controls
 		removeMouseDownTouchStart();
 	}
 });
+//next level/start again
+startGameButton?.addEventListener("click", () => {
+	startGameButton.disabled = true;
+	if (startGameButton.textContent !== "Start again") {
+		currentLvl++;
+	} else {
+		currentLvl = 0;
+		currentMaxLvl = 0;
+		resetLoadList();
+		localStorage.removeItem("game");
+		startGameButton.textContent = "Next level";
+	}
+	if (currentLvlElem) currentLvlElem.textContent = (currentLvl + 1).toString();
+	if (bestMoves) bestMoves.textContent = getLevels()[currentLvl].bestMoves;
+	resetValues();
 
+	animate();
+});
+//restart level
+restartLevelButton?.addEventListener("click", () => {
+	if (startGameButton) {
+		if (startGameButton.textContent === "Start again") {
+			startGameButton.textContent = "Next level";
+		}
+		startGameButton.disabled = true;
+	}
+	resetValues();
+
+	if (stopAnimation) {
+		stopAnimation = false;
+		animate();
+	}
+});
+//select level
+loadLevelSelect?.addEventListener("change", () => {
+	if (startGameButton) {
+		if (startGameButton.textContent === "Start again") {
+			startGameButton.textContent = "Next level";
+		}
+		startGameButton.disabled = true;
+	}
+	currentLvl = loadLevelSelect.selectedIndex - 1;
+	if (currentLvlElem) currentLvlElem.textContent = (currentLvl + 1).toString();
+	loadLevelSelect.selectedIndex = 0;
+	resetValues();
+
+	if (stopAnimation) {
+		stopAnimation = false;
+		animate();
+	}
+});
+
+//start game function
+export function startGame() {
+	if (startGameButton) {
+		startGameButton.disabled = true;
+	}
+	if (currentLvlElem) {
+		currentLvlElem.textContent = (currentLvl + 1).toString();
+	}
+
+	//create board
+	gameGrid.create(gameBoard);
+	if (playerMoves) playerMoves.textContent = movesCount.toString();
+	if (bestMoves) bestMoves.textContent = getLevels()[currentLvl].bestMoves;
+	if (totalLvlsElem) totalLvlsElem.innerText = maxLevels.toString();
+	if (loadLevelSelect) blocks = getLevels()[currentLvl].blocks;
+	for (let i = 0; i <= currentLvl; i++) {
+		addLevelToLoadList(i);
+	}
+
+	//start animations
+	animate();
+}
+
+startGame();
+
+/* HELPER FUNCTIONS */
+function addEvents() {
+	if (canvas) {
+		canvas.addEventListener("mousemove", function (e) {
+			const canvasPosition = canvas.getBoundingClientRect();
+			mouse.x = e.x - canvasPosition.left;
+			mouse.y = e.y - canvasPosition.top;
+		});
+		canvas.addEventListener("mouseleave", function (e) {
+			mouse.x = 0;
+			mouse.y = 0;
+		});
+		canvas.onmousedown = mouseDrag;
+		canvas.ontouchstart = touchDrag;
+	}
+}
+function offsetTouch(curTouch: globalThis.Touch) {
+	if (canvas) {
+		const canvasPosition = canvas.getBoundingClientRect();
+		touch.x = curTouch.pageX - canvasPosition.left;
+		touch.y = curTouch.pageY - canvasPosition.top;
+	}
+}
+//Load one more level on win
+function addLevelToLoadList(curMax: number) {
+	const newOption = document.createElement("option");
+	newOption.textContent = "Level " + (curMax + 1).toString();
+	loadLevelSelect?.append(newOption);
+}
+//Delete all except "Level 1" and hidden on "Start again"
+function resetLoadList() {
+	if (loadLevelSelect?.lastChild) {
+		while (loadLevelSelect.length > 2) {
+			loadLevelSelect.removeChild(loadLevelSelect.lastChild);
+		}
+	}
+}
+//disable events
+function removeMouseDownTouchStart() {
+	if (canvas) {
+		canvas.onmousedown = null;
+		canvas.ontouchstart = null;
+	}
+}
 function resetValues() {
 	if (canvas) canvas.style.opacity = "1";
 	if (levelCleared) levelCleared.style.display = "none";
@@ -334,56 +548,3 @@ function resetValues() {
 	isWin = false;
 	blocks = getLevels()[currentLvl].blocks;
 }
-
-startGameButton?.addEventListener("click", () => {
-	startGameButton.disabled = true;
-	if (startGameButton.textContent !== "Start again") {
-		currentLvl++;
-	} else {
-		currentLvl = 0;
-		startGameButton.textContent = "Next level";
-	}
-	if (currentLvlElem?.textContent) {
-		currentLvlElem.textContent = (currentLvl + 1).toString();
-	}
-	if (bestMoves) bestMoves.textContent = getLevels()[currentLvl].bestMoves;
-	resetValues();
-
-	animate();
-});
-resetLevelButton?.addEventListener("click", () => {
-	if (startGameButton) {
-		if (startGameButton.textContent === "Start again") {
-			startGameButton.textContent = "Next level";
-		}
-		startGameButton.disabled = true;
-	}
-	resetValues();
-
-	if (restartLvl) {
-		restartLvl = false;
-		animate();
-	}
-});
-
-//start game function
-export function startGame() {
-	if (startGameButton) {
-		startGameButton.disabled = true;
-	}
-	if (currentLvlElem) {
-		currentLvlElem.textContent = "1";
-	}
-
-	//create board
-	gameGrid.create(gameBoard);
-	if (playerMoves) playerMoves.textContent = movesCount.toString();
-	if (bestMoves) bestMoves.textContent = getLevels()[currentLvl].bestMoves;
-	if (totalLvlsElem) totalLvlsElem.innerText = maxLevels.toString();
-	blocks = getLevels()[currentLvl].blocks;
-
-	//start animations
-	animate();
-}
-
-startGame();

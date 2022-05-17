@@ -37,7 +37,6 @@ body {
 	transform: translate(-50%, -50%);
 }
 #controlPanel {
-	touch-action: none;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
@@ -50,6 +49,7 @@ body {
 	height: 6.25rem;
 	width: min(800px, 100%);
 	color: rgb(230, 196, 125);
+	touch-action: none;
 }
 #movesPanel,
 #levelsPanel {
@@ -63,21 +63,44 @@ body {
 	align-items: flex-end;
 	white-space: nowrap;
 }
+/* level selection */
+#loadLevel {
+	position: absolute;
+	padding: 0.5rem 1rem;
+	top: calc(50% - 21rem);
+	left: calc(50% + 20.9rem);
+	transform: translate(-50%, -50%);
+
+	appearance: none;
+	font-size: 1rem;
+	color: rgb(230, 196, 125);
+	background-color: rgba(41, 16, 0, 0.8);
+	user-select: none;
+}
+#loadLevel:focus {
+	outline: none;
+}
+#loadLevel > option {
+	margin: 0;
+	padding: 0;
+}
 /* buttons */
 .btn {
-	border: none;
 	display: inline-block;
-	font-size: 1.5rem;
 	padding: 1rem 2rem;
+	border: none;
 	border-radius: 2rem;
+	font-size: 1.5rem;
 	color: rgb(41, 16, 0);
 	background-color: rgb(230, 196, 125);
 	box-shadow: 0 0 1rem rgb(25, 25, 25, 0.5);
 	user-select: none;
-}
-.btn:enabled:hover {
-	background-color: white;
 	cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+	.btn:enabled:hover {
+		background-color: white;
+	}
 }
 .btn:disabled {
 	opacity: 0.5;

@@ -30,6 +30,7 @@ export class Mouse implements Unit {
 		this.height = 0.1;
 	}
 }
+export class Touch extends Mouse {}
 //game board
 export class Board implements Unit {
 	x: number;
@@ -160,6 +161,19 @@ export class GameGrid {
 					this.cells.push(new Cell(x, y));
 				}
 			}
+		}
+	}
+	draw() {
+		if (ctx) {
+			ctx.strokeStyle = "rgb(230, 196, 125,0.1)";
+			this.cells.forEach((elem) => {
+				ctx.strokeRect(
+					elem.x + cellGap,
+					elem.y + cellGap,
+					elem.width - cellGap,
+					elem.height - cellGap
+				);
+			});
 		}
 	}
 }

@@ -1,1 +1,1 @@
-export default "/dist/dist/player.svg";
+export default "/move-brick-game/dist/player.svg";

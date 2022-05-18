@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/dist/index.js" type="module"></script>
+  <title>Game</title>
+</head>
+
+<body>
+  <canvas id="myCanvas" width="800" height="800"></canvas>
+  <!-- control -->
+  <div id="controlPanel">
+    <div id="movesPanel">
+      <div id="movesText">
+        <p>Your moves:</p>
+        <p>Best moves:</p>
+      </div>
+      <div id="movesCounter">
+        <p></p>
+        <p></p>
+      </div>
+    </div>
+    <div id="levelsPanel">
+      <div id="levelsText">
+        <p>Level:</p>
+        <p>Total:</p>
+      </div>
+      <div id="levelsCounter">
+        <p></p>
+        <p></p>
+      </div>
+    </div>
+    <button id="restartLevel" class="btn">Restart level</button>
+    <button id="nextLevel" class="btn">Next level</button>
+  </div>
+  <select id="loadLevel">
+    <option value="" disabled selected hidden>Load lvl</option>
+  </select>
+  <!-- Victory Messages -->
+  <h3>LEVEL CLEARED</h3>
+  <h3>ALL LEVELS CLEARED</h3>
+</body>
+
+</html>

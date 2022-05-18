@@ -17,15 +17,6 @@ body {
 	font-family: BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
 		"Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
-.invis {
-	position: relative;
-	font-size: 4rem;
-	top: 1%;
-	margin: 0;
-	opacity: 0;
-	color: white;
-	text-align: center;
-}
 #myCanvas {
 	touch-action: none;
 	position: absolute;
@@ -125,4 +116,4 @@ h3 {
 	p {
 		font-size: 1.5rem;
 	}
-} ;
+}

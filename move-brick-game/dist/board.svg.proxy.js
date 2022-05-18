@@ -1,0 +1,1 @@
+export default "/move-brick-game/dist/board.svg";

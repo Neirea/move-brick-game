@@ -351,7 +351,6 @@ function mouseDrag(e: MouseEvent) {
 /* ANIMATION FUNCTIONS */
 //draw essential blocks
 function drawEssentials() {
-	canvas && ctx?.clearRect(0, 0, canvas.width, canvas.height);
 	gameBoard.draw();
 	gameGrid.draw();
 	for (let i = 0; i < blocks.length; i++) {

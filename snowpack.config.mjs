@@ -2,7 +2,7 @@
 export default {
 	mount: {
 		public: { url: "/", static: true },
-		src: { url: "/move-brick-game/dist" },
+		src: { url: "/dist" },
 	},
 	plugins: [
 		[
@@ -28,6 +28,7 @@ export default {
 		/* ... */
 	},
 	buildOptions: {
+		baseUrl: "/dist",
 		/* ... */
 	},
 };

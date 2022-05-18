@@ -28,7 +28,7 @@ export default {
 		/* ... */
 	},
 	buildOptions: {
-		baseUrl: "/dist",
+		baseUrl: "/move-brick-game",
 		/* ... */
 	},
 };

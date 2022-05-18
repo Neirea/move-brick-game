@@ -1,0 +1,1 @@
+export default "/dist/dist/long_v.svg";

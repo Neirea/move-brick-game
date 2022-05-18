@@ -1,1 +1,0 @@
-export default "/move-brick-game/dist/short_v.svg";

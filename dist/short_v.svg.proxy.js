@@ -1,0 +1,1 @@
+export default "/dist/dist/short_v.svg";

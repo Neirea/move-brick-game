@@ -1,0 +1,1 @@
+export default "/dist/player.svg";

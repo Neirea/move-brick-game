@@ -428,6 +428,7 @@ loadLevelSelect?.addEventListener("change", () => {
 	currentLvl = loadLevelSelect.selectedIndex - 1;
 	if (currentLvlElem) currentLvlElem.textContent = (currentLvl + 1).toString();
 	loadLevelSelect.selectedIndex = 0;
+	if (bestMoves) bestMoves.textContent = getLevels()[currentLvl].bestMoves;
 
 	resetUIElements();
 

@@ -13,7 +13,7 @@ body {
 	padding: 0;
 	width: 100%;
 	height: 100vh;
-	font-size: 1.5rem;
+	font-size: 1.2rem;
 	font-family: BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
 		"Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
@@ -43,11 +43,11 @@ body {
 	position: absolute;
 	padding: 0 1.25rem;
 	left: 50%;
-	top: calc(21.875rem + 50%);
+	top: calc(17.5rem + 50%);
 	transform: translate(-50%, -50%);
 	background: rgba(41, 16, 0, 0.8);
-	height: 6.25rem;
-	width: min(800px, 100%);
+	height: 5rem;
+	width: 40rem;
 	color: rgb(230, 196, 125);
 	touch-action: none;
 }
@@ -67,8 +67,8 @@ body {
 #loadLevel {
 	position: absolute;
 	padding: 0.5rem 1rem;
-	top: calc(50% - 21rem);
-	left: calc(50% + 20.9rem);
+	top: calc(50% - 16.8rem);
+	left: calc(50% + 16.7rem);
 	transform: translate(-50%, -50%);
 
 	appearance: none;
@@ -87,10 +87,11 @@ body {
 /* buttons */
 .btn {
 	display: inline-block;
-	padding: 1rem 2rem;
+	padding: 0.75rem 1.5rem;
 	border: none;
 	border-radius: 2rem;
-	font-size: 1.5rem;
+	font-size: 1.2rem;
+	font-weight: 550;
 	color: rgb(41, 16, 0);
 	background-color: rgb(230, 196, 125);
 	box-shadow: 0 0 1rem rgb(25, 25, 25, 0.5);
@@ -109,7 +110,7 @@ body {
 h3 {
 	display: none;
 	position: absolute;
-	top: calc(50% - 6.25rem);
+	top: calc(50% - 5rem);
 	left: 50%;
 	transform: translate(-50%, -50%);
 	font-size: 3.5rem;
@@ -117,9 +118,9 @@ h3 {
 	white-space: nowrap;
 	user-select: none;
 }
-@media (max-width: 800px) {
+@media (max-width: 640px) {
 	* {
-		font-size: 2vw;
+		font-size: 2.5vw;
 	}
 	p {
 		font-size: 1.5rem;

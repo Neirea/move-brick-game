@@ -37,21 +37,19 @@ export class Board implements Unit {
 	y: number;
 	width: number;
 	height: number;
-	image: HTMLImageElement;
 	constructor(x: number, y: number, numberOfCells: number) {
-		const boardImg = new Image();
 		this.x = x;
 		this.y = y;
 		this.width = cellSize * numberOfCells;
 		this.height = cellSize * numberOfCells;
-		this.image = boardImg;
 	}
 	draw() {
 		if (ctx) {
-			this.image.src = boardImage;
+			const boardImg = new Image();
+			boardImg.src = boardImage;
 			//need offsets because of bad image
 			ctx.drawImage(
-				this.image,
+				boardImg,
 				this.x - cellSize / 10 - cellGap / 2,
 				this.y - cellSize / 10 - cellGap / 2,
 				this.width + 2 * cellGap + 1.85 * cellSize,

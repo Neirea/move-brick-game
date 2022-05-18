@@ -1,3 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="100" height="200" viewBox="0 0 100 200">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="200" viewBox="0 0 100 200">
   <rect x="5" y="5" width="90" height="190" fill="#AF5E0D" stroke="#FA8F24" stroke-width="5" ry="10" rx="10"/>
 </svg>

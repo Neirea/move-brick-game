@@ -1,7 +1,6 @@
 let clientW = document.documentElement.clientWidth;
-let clientH = document.documentElement.clientHeight;
 
-export let canvasSize = clientW > clientH ? 800 : clientW;
+export let canvasSize = clientW > 640 ? 640 : clientW;
 export const cellSize = canvasSize / 8;
 export const cellGap = canvasSize / 160;
 export const borderWidth = canvasSize / 40;

@@ -1,5 +1,6 @@
+import SecureLS from "../_snowpack/pkg/secure-ls.js";
 import "./index.css.proxy.js";
-import {cellSize, Direction, canvasSize} from "./constants.js";
+import {cellSize, Direction} from "./constants.js";
 import {Board, Block, Mouse, Touch, GameGrid} from "./classes.js";
 import {
   isCollision,
@@ -7,24 +8,26 @@ import {
   checkBlock,
   checkWin,
   offsetX,
-  offsetY,
-  encode,
-  decode
+  offsetY
 } from "./utils.js";
 import {getLevels} from "./levels.js";
-const canvas = document.getElementById("myCanvas");
-const ctx = canvas?.getContext("2d");
-const startGameButton = document.getElementById("nextLevel");
-const restartLevelButton = document.getElementById("restartLevel");
-const playerMoves = document.querySelector("#movesCounter>p:first-of-type");
-const bestMoves = document.querySelector("#movesCounter>p:last-of-type");
-const currentLvlElem = document.querySelector("#levelsCounter>p:first-of-type");
-const totalLvlsElem = document.querySelector("#levelsCounter>p:last-of-type");
+const ls = new SecureLS({encodingType: "aes"});
+const myHTML = '<section id="controls-container"><div id="control-panel"><div id="moves-panel"><div id="moves-text"><p>Your moves:</p><p>Best moves:</p></div><div id="moves-counter"><p></p><p></p></div></div><div id="levels-panel"><div id="levels-text"><p>Level:</p><p>Total:</p></div><div id="levels-counter"><p></p><p></p></div></div><button id="restart-level" class="btn">Restart level</button><button id="next-level" class="btn">Next level</button></div><select id="load-level"><option value="" disabled selected hidden>Load lvl</option></select><!-- Victory Messages --><h3>LEVEL CLEARED</h3><h3>ALL LEVELS CLEARED</h3></section>';
+const tempDiv = document.createElement("div");
+tempDiv.innerHTML = myHTML;
+document.body.append(tempDiv.children[0]);
+tempDiv.remove();
+const canvas = document.getElementById("game-canvas");
+const startGameButton = document.getElementById("next-level");
+const restartLevelButton = document.getElementById("restart-level");
+const playerMoves = document.querySelector("#moves-counter>p:first-of-type");
+const bestMoves = document.querySelector("#moves-counter>p:last-of-type");
+const currentLvlElem = document.querySelector("#levels-counter>p:first-of-type");
+const totalLvlsElem = document.querySelector("#levels-counter>p:last-of-type");
 const levelCleared = document.querySelector("h3:first-of-type");
 const allLevelsCleared = document.querySelector("h3:last-of-type");
-const loadLevelSelect = document.querySelector("#loadLevel");
-const getLvl = localStorage.getItem("game");
-let currentLvl = getLvl !== null ? parseInt(decode(getLvl)) : 0;
+const loadLevelSelect = document.querySelector("#load-level");
+let currentLvl = ls.get("data") || 0;
 let currentMaxLvl = currentLvl;
 const maxLevels = getLevels().length;
 const gameGrid = new GameGrid();
@@ -35,8 +38,6 @@ const gameBoard = new Board(offsetX(0), offsetY(0), 6);
 let movesCount = 0;
 let stopAnimation = true;
 if (canvas != null) {
-  canvas.width = canvasSize;
-  canvas.height = canvasSize;
   addEvents();
 }
 function touchDrag(e) {
@@ -396,7 +397,7 @@ function actionsOnWin() {
   }
   if (currentLvl + 1 !== maxLevels && currentLvl + 1 > currentMaxLvl) {
     currentMaxLvl = currentLvl + 1;
-    localStorage.setItem("game", encode((currentLvl + 1).toString()));
+    ls.set("data", currentLvl + 1);
     addLevelToLoadList(currentLvl + 1);
   }
   const mouseUpEvent = new Event("mouseup");

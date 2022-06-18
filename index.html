@@ -1,47 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="description" content="Move Brick Game" />
+		<link rel="apple-touch-icon" href="/logo192.png" />
+		<link rel="manifest" href="/manifest.json" />
+		<script src="/move-brick-game/dist/index.js" type="module"></script>
+		<title>Move Brick Game</title>
+	</head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="/move-brick-game/dist/index.js" type="module"></script>
-  <title>Game</title>
-</head>
-
-<body>
-  <canvas id="myCanvas" width="800" height="800"></canvas>
-  <!-- control -->
-  <div id="controlPanel">
-    <div id="movesPanel">
-      <div id="movesText">
-        <p>Your moves:</p>
-        <p>Best moves:</p>
-      </div>
-      <div id="movesCounter">
-        <p></p>
-        <p></p>
-      </div>
-    </div>
-    <div id="levelsPanel">
-      <div id="levelsText">
-        <p>Level:</p>
-        <p>Total:</p>
-      </div>
-      <div id="levelsCounter">
-        <p></p>
-        <p></p>
-      </div>
-    </div>
-    <button id="restartLevel" class="btn">Restart level</button>
-    <button id="nextLevel" class="btn">Next level</button>
-  </div>
-  <select id="loadLevel">
-    <option value="" disabled selected hidden>Load lvl</option>
-  </select>
-  <!-- Victory Messages -->
-  <h3>LEVEL CLEARED</h3>
-  <h3>ALL LEVELS CLEARED</h3>
-</body>
-
+	<body>
+		<noscript>You need to enable JavaScript to run the game</noscript>
+		<canvas id="game-canvas" width="640" height="640"></canvas>
+	</body>
 </html>

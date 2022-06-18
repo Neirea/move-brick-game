@@ -54,9 +54,3 @@ export function checkWin(playerBlock, bounds) {
   }
   return false;
 }
-export function encode(text) {
-  return window.btoa(text);
-}
-export function decode(text) {
-  return window.atob(text);
-}

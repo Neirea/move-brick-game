@@ -6,7 +6,7 @@ import vShortImage from "./short_v.svg.proxy.js";
 import vLongImage from "./long_v.svg.proxy.js";
 import playerImage from "./player.svg.proxy.js";
 import boardImage from "./board.svg.proxy.js";
-const canvas = document.getElementById("myCanvas");
+const canvas = document.getElementById("game-canvas");
 const ctx = canvas?.getContext("2d");
 export class Mouse {
   constructor() {

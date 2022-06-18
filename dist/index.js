@@ -1,4 +1,4 @@
-import SecureLS from "../_snowpack/pkg/secure-ls.js";
+import SecureLS from "../dependencies/pkg/secure-ls.js";
 import "./index.css.proxy.js";
 import {cellSize, Direction} from "./constants.js";
 import {Board, Block, Mouse, Touch, GameGrid} from "./classes.js";

@@ -29,6 +29,7 @@ export default {
 	},
 	buildOptions: {
 		baseUrl: "/move-brick-game",
+		metaUrlPath: "dependencies",
 		/* ... */
 	},
 };

@@ -7,7 +7,9 @@ import vLongImage from "./long_v.svg";
 import playerImage from "./player.svg";
 import boardImage from "./board.svg";
 
-const canvas = document.getElementById("myCanvas") as HTMLCanvasElement | null;
+const canvas = document.getElementById(
+	"game-canvas"
+) as HTMLCanvasElement | null;
 const ctx = canvas?.getContext("2d");
 
 export interface Unit {

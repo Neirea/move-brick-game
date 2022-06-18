@@ -70,10 +70,3 @@ export function checkWin(playerBlock: Block, bounds: Unit) {
 	}
 	return false;
 }
-
-export function encode(text: string) {
-	return window.btoa(text);
-}
-export function decode(text: string) {
-	return window.atob(text);
-}

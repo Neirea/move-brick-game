@@ -1,6 +1,6 @@
-let clientW = document.documentElement.clientWidth;
+const canvas = document.getElementById("game-canvas")! as HTMLCanvasElement;
 
-export let canvasSize = clientW > 640 ? 640 : clientW;
+export const canvasSize = canvas.width > 640 ? 640 : canvas.width;
 export const cellSize = canvasSize / 8;
 export const cellGap = canvasSize / 160;
 export const borderWidth = canvasSize / 40;

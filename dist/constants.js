@@ -1,5 +1,5 @@
-const canvas = document.getElementById("game-canvas");
-export const canvasSize = canvas.width > 640 ? 640 : canvas.width;
+const clientW = document.documentElement.clientWidth;
+export const canvasSize = clientW > 640 ? 640 : clientW;
 export const cellSize = canvasSize / 8;
 export const cellGap = canvasSize / 160;
 export const borderWidth = canvasSize / 40;
@@ -9,10 +9,13 @@ export var BlockSize;
   BlockSize2[BlockSize2["Short"] = 2] = "Short";
   BlockSize2[BlockSize2["Long"] = 3] = "Long";
 })(BlockSize || (BlockSize = {}));
-export var Direction;
-(function(Direction2) {
-  Direction2[Direction2["Up"] = 0] = "Up";
-  Direction2[Direction2["Down"] = 1] = "Down";
-  Direction2[Direction2["Right"] = 2] = "Right";
-  Direction2[Direction2["Left"] = 3] = "Left";
-})(Direction || (Direction = {}));
+const debounce = (fn, ms = 200) => {
+  let timeoutId;
+  return function(...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn.apply(this, args), ms);
+  };
+};
+window.addEventListener("resize", debounce(() => {
+  window.location.reload();
+}, 200));

@@ -1,14 +1,15 @@
 import SecureLS from "secure-ls";
 import "./index.css";
-import { cellSize, Direction } from "./constants";
+import { canvasSize, cellSize } from "./constants";
 import { Board, Block, Mouse, Touch, GameGrid } from "./classes";
 import {
 	isCollision,
 	checkBounds,
-	checkBlock,
 	checkWin,
 	offsetX,
 	offsetY,
+	getClosestBlocksX,
+	getClosestBlocksY,
 } from "./utils";
 import { getLevels } from "./levels";
 
@@ -69,6 +70,8 @@ let stopAnimation = true;
 
 //add settings
 if (canvas != null) {
+	canvas.width = canvasSize;
+	canvas.height = canvasSize;
 	addEvents();
 }
 
@@ -84,12 +87,15 @@ function touchDrag(e: TouchEvent) {
 	/* ---------- */
 	const movingBlockIndex = getBlockIndexByTouch();
 	if (movingBlockIndex === -1) return;
-	const initialBlockX = blocks[movingBlockIndex].x;
-	const initialBlockY = blocks[movingBlockIndex].y;
+	const currentBlock = blocks[movingBlockIndex];
+	const initialBlockX = currentBlock.x;
+	const initialBlockY = currentBlock.y;
 	const initialTouchX = firstTouch.pageX;
 	const initialTouchY = firstTouch.pageY;
-	let previousTouchPosX = firstTouch.pageX;
-	let previousTouchPosY = firstTouch.pageY;
+
+	/* 	get borders of block movement */
+	const blockBordersX = getClosestBlocksX(currentBlock, blocks, gameBoard);
+	const blockBordersY = getClosestBlocksY(currentBlock, blocks, gameBoard);
 
 	if (movingBlockIndex >= 0) {
 		document.ontouchend = () => {
@@ -112,85 +118,33 @@ function touchDrag(e: TouchEvent) {
 		}
 		return -1;
 	}
-	function touchDragX(ex: TouchEvent, block: Block) {
+	function touchDragX(e: TouchEvent, block: Block) {
 		let x = block.x;
-		/* touch part */
-		const firstTouch = ex.targetTouches[0];
-		/* ---------- */
-
-		//horizontal
+		const firstTouch = e.targetTouches[0];
 		const mouseDeltaX = firstTouch.pageX - initialTouchX;
-
-		const moveDirectionX =
-			firstTouch.pageX > previousTouchPosX ? Direction.Right : Direction.Left;
-		if (moveDirectionX === Direction.Right && !block.canMove.right) {
-			//check distance to other
-			return;
-		}
-		if (moveDirectionX === Direction.Left && !block.canMove.left) {
-			return;
-		}
-		block.canMove.right = true;
-		block.canMove.left = true;
-
 		const movePositionX = initialBlockX + mouseDeltaX;
+
 		const testBlock: Block = new Block(
 			movePositionX, //x
 			block.y,
 			block.vertical,
 			block.size
 		);
-
-		x = checkBounds(testBlock, gameBoard).x;
-		for (let i = 0; i < blocks.length; i++) {
-			if (block !== blocks[i] && isCollision(testBlock, blocks[i])) {
-				const movement = checkBlock(testBlock, blocks[i]);
-				movement.direction === Direction.Right
-					? (block.canMove.right = false)
-					: (block.canMove.left = false);
-				x = movement.x;
-			}
-		}
-		block.x = x;
-		previousTouchPosX = firstTouch.pageX;
+		block.x = checkBounds(testBlock, blockBordersX).x;
 	}
-	function touchDragY(ey: TouchEvent, block: Block) {
+	function touchDragY(e: TouchEvent, block: Block) {
 		let y = block.y;
-		/* touch part */
-		const firstTouch = ey.targetTouches[0];
-		/* ---------- */
+		const firstTouch = e.targetTouches[0];
 		const mouseDeltaY = firstTouch.pageY - initialTouchY;
-		const moveDirectionY =
-			firstTouch.pageY > previousTouchPosY ? Direction.Down : Direction.Up;
-		if (moveDirectionY === Direction.Up && !block.canMove.up) {
-			return;
-		}
-		if (moveDirectionY === Direction.Down && !block.canMove.down) {
-			return;
-		}
-		block.canMove.up = true;
-		block.canMove.down = true;
-
 		const movePositionY = initialBlockY + mouseDeltaY;
+
 		const testBlock: Block = new Block(
 			block.x,
 			movePositionY, //y
 			block.vertical,
 			block.size
 		);
-
-		y = checkBounds(testBlock, gameBoard).y;
-		for (let i = 0; i < blocks.length; i++) {
-			if (block !== blocks[i] && isCollision(testBlock, blocks[i])) {
-				const movement = checkBlock(testBlock, blocks[i]);
-				movement.direction === Direction.Up
-					? (block.canMove.up = false)
-					: (block.canMove.down = false);
-				y = movement.y;
-			}
-		}
-		block.y = y;
-		previousTouchPosY = firstTouch.pageY;
+		block.y = checkBounds(testBlock, blockBordersY).y;
 	}
 	function stopTouchDrag(block: Block) {
 		//calculate final position and round up to final cell
@@ -226,12 +180,15 @@ function mouseDrag(e: MouseEvent) {
 	//on mousedown get index of current block
 	const movingBlockIndex = getBlockIndex();
 	if (movingBlockIndex === -1) return;
-	const initialBlockX = blocks[movingBlockIndex].x;
-	const initialBlockY = blocks[movingBlockIndex].y;
+	const currentBlock = blocks[movingBlockIndex];
+	const initialBlockX = currentBlock.x;
+	const initialBlockY = currentBlock.y;
 	const initialMouseX = e.x;
 	const initialMouseY = e.y;
-	let previousMousePosX = e.x;
-	let previousMousePosY = e.y;
+
+	/* 	get borders of block movement */
+	const blockBordersX = getClosestBlocksX(currentBlock, blocks, gameBoard);
+	const blockBordersY = getClosestBlocksY(currentBlock, blocks, gameBoard);
 
 	if (movingBlockIndex >= 0) {
 		document.onmouseup = () => stopMouseDrag(blocks[movingBlockIndex]);
@@ -252,78 +209,30 @@ function mouseDrag(e: MouseEvent) {
 	//on drag horizontally
 	function mouseDragX(e: MouseEvent, block: Block) {
 		let x = block.x;
-
-		//horizontal
 		const mouseDeltaX = e.x - initialMouseX;
-
-		const moveDirectionX =
-			e.x > previousMousePosX ? Direction.Right : Direction.Left;
-		if (moveDirectionX === Direction.Right && !block.canMove.right) {
-			//check distance to other
-			return;
-		}
-		if (moveDirectionX === Direction.Left && !block.canMove.left) {
-			return;
-		}
-		block.canMove.right = true;
-		block.canMove.left = true;
-
 		const movePositionX = initialBlockX + mouseDeltaX;
+
 		const testBlock: Block = new Block(
 			movePositionX, //x
 			block.y,
 			block.vertical,
 			block.size
 		);
-
-		x = checkBounds(testBlock, gameBoard).x;
-		for (let i = 0; i < blocks.length; i++) {
-			if (block !== blocks[i] && isCollision(testBlock, blocks[i])) {
-				const movement = checkBlock(testBlock, blocks[i]);
-				movement.direction === Direction.Right
-					? (block.canMove.right = false)
-					: (block.canMove.left = false);
-				x = movement.x;
-			}
-		}
-		block.x = x;
-		previousMousePosX = e.x;
+		block.x = checkBounds(testBlock, blockBordersX).x;
 	}
 	//on drag vertically
 	function mouseDragY(e: MouseEvent, block: Block) {
 		let y = block.y;
 		const mouseDeltaY = e.y - initialMouseY;
-		const moveDirectionY =
-			e.y > previousMousePosY ? Direction.Down : Direction.Up;
-		if (moveDirectionY === Direction.Up && !block.canMove.up) {
-			return;
-		}
-		if (moveDirectionY === Direction.Down && !block.canMove.down) {
-			return;
-		}
-		block.canMove.up = true;
-		block.canMove.down = true;
-
 		const movePositionY = initialBlockY + mouseDeltaY;
+
 		const testBlock: Block = new Block(
 			block.x,
 			movePositionY, //y
 			block.vertical,
 			block.size
 		);
-
-		y = checkBounds(testBlock, gameBoard).y;
-		for (let i = 0; i < blocks.length; i++) {
-			if (block !== blocks[i] && isCollision(testBlock, blocks[i])) {
-				const movement = checkBlock(testBlock, blocks[i]);
-				movement.direction === Direction.Up
-					? (block.canMove.up = false)
-					: (block.canMove.down = false);
-				y = movement.y;
-			}
-		}
-		block.y = y;
-		previousMousePosY = e.y;
+		block.y = checkBounds(testBlock, blockBordersY).y;
 	}
 	//on drop
 	function stopMouseDrag(block: Block) {

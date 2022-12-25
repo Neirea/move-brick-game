@@ -1,13 +1,15 @@
-//cachec version
+//cache version
 const cacheName = "v1";
 
+let baseUrl = location.href.replace("/sw.js", "");
+
 const imageURLs = [
-    "/dist/board.svg",
-    "/dist/long_v.svg",
-    "/dist/long.svg",
-    "/dist/player.svg",
-    "/dist/short_v.svg",
-    "/dist/short.svg",
+    `${baseUrl}/dist/board.svg`,
+    `${baseUrl}/dist/long_v.svg`,
+    `${baseUrl}/dist/long.svg`,
+    `${baseUrl}/dist/player.svg`,
+    `${baseUrl}/dist/short_v.svg`,
+    `${baseUrl}/dist/short.svg`,
 ];
 
 self.addEventListener("install", (e) => {

@@ -12,11 +12,9 @@
         <script src="/move-brick-game/dist/index.js" type="module"></script>
         <script>
             if (navigator.serviceWorker) {
-                navigator.serviceWorker
-                    .register("/move-brick-game/sw.js", {
-                        scope: "/move-brick-game/",
-                    })
-                    .then((reg) => console.log("Service Worker: Registered"));
+                navigator.serviceWorker.register("/move-brick-game/sw.js", {
+                    scope: "/move-brick-game/",
+                });
             }
         </script>
         <title>Move Brick Game</title>

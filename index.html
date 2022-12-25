@@ -1,19 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<link rel="icon" href="/move-brick-game/favicon.ico" />
-		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="description" content="Move Brick Game" />
-		<link rel="apple-touch-icon" href="/move-brick-game/logo192.png" />
-		<link rel="manifest" href="/move-brick-game/manifest.json" />
-		<script src="/move-brick-game/dist/index.js" type="module"></script>
-		<title>Move Brick Game</title>
-	</head>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" href="/move-brick-game/favicon.ico" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="Move Brick Game" />
+        <meta name="theme-color" content="#191919" />
+        <link rel="apple-touch-icon" href="/move-brick-game/logo192.png" />
+        <link rel="manifest" href="/move-brick-game/manifest.json" />
+        <script src="/move-brick-game/dist/index.js" type="module"></script>
+        <script>
+            if (navigator.serviceWorker) {
+                navigator.serviceWorker
+                    .register("/move-brick-game/sw.js", {
+                        scope: "/move-brick-game/",
+                    })
+                    .then((reg) => console.log("Service Worker: Registered"));
+            }
+        </script>
+        <title>Move Brick Game</title>
+    </head>
 
-	<body>
-		<noscript>You need to enable JavaScript to run the game</noscript>
-		<canvas id="game-canvas" width="640" height="640"></canvas>
-	</body>
+    <body>
+        <noscript>You need to enable JavaScript to run the game</noscript>
+        <canvas id="game-canvas" width="640" height="640"></canvas>
+    </body>
 </html>

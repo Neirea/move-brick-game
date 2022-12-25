@@ -24,12 +24,12 @@ export class Board {
     this.y = y;
     this.width = cellSize * numberOfCells;
     this.height = cellSize * numberOfCells;
+    this.image = new Image();
+    this.image.src = boardImage;
   }
   draw() {
     if (ctx) {
-      const boardImg = new Image();
-      boardImg.src = boardImage;
-      ctx.drawImage(boardImg, this.x - cellSize / 10 - cellGap / 2, this.y - cellSize / 10 - cellGap / 2, this.width + 2 * cellGap + 1.85 * cellSize, this.height + 2 * cellGap + cellSize / 5);
+      ctx.drawImage(this.image, this.x - cellSize / 10 - cellGap / 2, this.y - cellSize / 10 - cellGap / 2, this.width + 2 * cellGap + 1.85 * cellSize, this.height + 2 * cellGap + cellSize / 5);
     }
   }
 }
@@ -60,16 +60,16 @@ export class Block {
       this.width = cellSize * size;
       this.height = cellSize;
     }
+    this.image = new Image();
+    if (this.vertical) {
+      this.image.src = this.size === BlockSize.Long ? vLongImage : vShortImage;
+    } else {
+      this.image.src = this.size === BlockSize.Long ? longImage : shortImage;
+    }
   }
   draw() {
     if (ctx) {
-      const blockImage = new Image();
-      if (this.vertical) {
-        blockImage.src = this.size === BlockSize.Long ? vLongImage : vShortImage;
-      } else {
-        blockImage.src = this.size === BlockSize.Long ? longImage : shortImage;
-      }
-      ctx.drawImage(blockImage, this.x + cellGap, this.y + cellGap, this.width - cellGap, this.height - cellGap);
+      ctx.drawImage(this.image, this.x + cellGap, this.y + cellGap, this.width - cellGap, this.height - cellGap);
     }
   }
 }
@@ -77,12 +77,12 @@ export class PlayerBlock extends Block {
   constructor(x) {
     const yCoord = offsetY(cellSize * 2);
     super(x, yCoord, false, BlockSize.Short);
+    this.image = new Image();
+    this.image.src = playerImage;
   }
   draw() {
     if (ctx) {
-      const blockImage = new Image();
-      blockImage.src = playerImage;
-      ctx.drawImage(blockImage, this.x + cellGap, this.y + cellGap, this.width - cellGap, this.height - cellGap);
+      ctx.drawImage(this.image, this.x + cellGap, this.y + cellGap, this.width - cellGap, this.height - cellGap);
     }
   }
 }

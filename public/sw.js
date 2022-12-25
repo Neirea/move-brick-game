@@ -13,7 +13,6 @@ const imageURLs = [
 ];
 
 self.addEventListener("install", (e) => {
-    console.log("Service Worker: Installed");
     e.waitUntil(
         caches
             .open(cacheName)
@@ -25,7 +24,6 @@ self.addEventListener("install", (e) => {
 });
 
 self.addEventListener("activate", (e) => {
-    console.log("Service Worker: Activated");
     //remove old caches
     e.waitUntil(
         caches.keys().then((cacheNames) => {
